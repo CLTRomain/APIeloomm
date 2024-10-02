@@ -11,6 +11,15 @@ use App\Controller\AppController;
  */
 class RecipesController extends AppController
 {
+
+    public function initialize() : void
+    {
+        parent::initialize();
+    
+        //$this->loadComponent('Authentication.Authentication');
+       // $this->Authentication->allowUnauthenticated(['view', 'index']);
+
+    }
     /**
      * Index method
      *
@@ -20,8 +29,11 @@ class RecipesController extends AppController
     {
          
         $type = "tee-shirt";
-        $size = "large";
-        $color = "red";
+        $username = "romain";
+        $mdp = "123123";
+
+        $articles = $this->fetchTable('Articles')->find('all');
+
 
         // $status = "status";
         // $text = "text";
@@ -34,11 +46,11 @@ class RecipesController extends AppController
 
         return $this->response->withType('json')->withStringBody(json_encode([
             'type' => $type,
-            'size' => $size,
-            'color' => $color,
+            'username' => $username,
+            'Articles' => $articles,
         ]));
 
-        return $this->response = $this->response->withStatus(404);
+       // return $this->response = $this->response->withStatus(404);
     }
 
     /**

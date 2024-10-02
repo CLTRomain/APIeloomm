@@ -24,7 +24,6 @@ class ArticlesController extends AppController
         // $this->set('recipes', $recipes);
         // $this->viewBuilder()->setOption('serialize', ['recipes']);
 
-        $this->response = $this->response->withStatus(200);
         return $this->response->withType('json')->withStringBody(json_encode([
             'recipes' => $recipes
         ]));
