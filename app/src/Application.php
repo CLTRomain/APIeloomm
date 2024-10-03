@@ -23,17 +23,9 @@ use Authentication\Middleware\AuthenticationMiddleware;
 use Cake\Routing\Router;
 use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * Application setup class.
- *
- * This defines the bootstrapping logic and middleware layers you
- * want to use in your application.
- *
- * @extends \Cake\Http\BaseApplication<\App\Application>
- */
 class Application extends BaseApplication implements AuthenticationServiceProviderInterface
 {
-  
+
     public function bootstrap(): void
 {
     parent::bootstrap();
@@ -44,64 +36,59 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 public function beforeFilter(\Cake\Event\EventInterface $event)
 {
     parent::beforeFilter($event);
-    
+
     // Assure-toi que l'authentification est bien initialisée
     $this->loadComponent('Authentication.Authentication');
 }
 
-public function getAuthenticationService(ServerRequestInterface $request): AuthenticationServiceInterface
-{
-    $service = new AuthenticationService();
+    public function getAuthenticationService(ServerRequestInterface $request): AuthenticationServiceInterface
+    {
+        $service = new AuthenticationService();
 
-    // Define where users should be redirected to when they are not authenticated
-    $service->setConfig([
-        'unauthenticatedRedirect' => Router::url([
-                'prefix' => false,
-                'plugin' => null,
-                'controller' => 'Users',
-                'action' => 'login',
-        ]),
-        'queryParam' => 'redirect',
-    ]);
+     //l'Authentification via formulaire
+        $service->loadAuthenticator('Authentication.Form', [
+            'fields' => [
+                'username' => 'email',
+                'password' => 'password'
+            ],
+        ]);
 
-    $fields = [
-        AbstractIdentifier::CREDENTIAL_USERNAME => 'email',
-        AbstractIdentifier::CREDENTIAL_PASSWORD => 'password'
-    ];
-    // Load the authenticators. Session should be first.
-    $service->loadAuthenticator('Authentication.Session');
-    $service->loadAuthenticator('Authentication.Form', [
-        'fields' => $fields,
-        'loginUrl' => Router::url([
-            'prefix' => false,
-            'plugin' => null,
-            'controller' => 'Users',
-            'action' => 'login',
-        ]),
-    ]);
+    // l'Authentification via TokenJWT
+        $service->loadIdentifier('Authentication.JwtSubject');
+        $service->loadAuthenticator('Authentication.Jwt', [
+            'secretKey' => file_get_contents(CONFIG . '/public.pem'), // lire le fichier public.pem pour décoder
+            'algorithm' => 'RS256',
+            'returnPayload' => true // true de base
+        ]);
 
-    // Load identifiers
-    $service->loadIdentifier('Authentication.Password', compact('fields'));
 
-    return $service;
-}
-public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
-{
-    $middlewareQueue->add(new ErrorHandlerMiddleware(Configure::read('Error')))
-        // Other middleware that CakePHP provides.
-        ->add(new AssetMiddleware())
-        ->add(new RoutingMiddleware($this))
-        ->add(new BodyParserMiddleware())
+        return $service;
+    }
 
-        // Add the AuthenticationMiddleware. It should be
-        // after routing and body parser.
-        ->add(new AuthenticationMiddleware($this));
+    public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
+    {
+        $middlewareQueue->add(new ErrorHandlerMiddleware(Configure::read('Error')))
+            // Other middleware that CakePHP provides.
+            ->add(new AssetMiddleware())
+            ->add(new RoutingMiddleware($this))
+            ->add(new BodyParserMiddleware())
 
-    return $middlewareQueue;
-}
+            // Add the AuthenticationMiddleware. It should be
+            // after routing and body parser.
+            ->add(new AuthenticationMiddleware($this));
+    /*    ->add(new AuthenticationMiddleware($this,[
+
+    ]));*/
+
+
+
+        return $middlewareQueue;
+    }
 
     public function services(ContainerInterface $container): void
     {
     }
+
+
 
 }

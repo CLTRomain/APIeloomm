@@ -11,14 +11,9 @@ use App\Controller\AppController;
  */
 class ArticlesController extends AppController
 {
-    /**
-     * Index method
-     *
-     * @return \Cake\Http\Response|null|void Renders view
-     */
     public function index()
     {
-         
+
         $recipes = "Articles Perfect";
 
         // $this->set('recipes', $recipes);
@@ -29,46 +24,29 @@ class ArticlesController extends AppController
         ]));
     }
 
-    /**
-     * View method
-     *
-     * @param string|null $id Article id.
-     * @return \Cake\Http\Response|null|void Renders view
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
     public function view($id = null)
     {
         $article = $this->Articles->get($id, contain: []);
         $this->set(compact('article'));
     }
 
-    /**
-     * Add method
-     *
-     * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
-     */
-    public function add()
+   public function add()
     {
-        $article = $this->Articles->newEmptyEntity();
+        $userinfo = $this->userinfo->newEmptyEntity();
         if ($this->request->is('post')) {
-            $article = $this->Articles->patchEntity($article, $this->request->getData());
-            if ($this->Articles->save($article)) {
+            $userinfo = $this->userinfo->patchEntity($userinfo, $this->request->getData());
+            if ($this->userinfo->save($userinfo)) {
                 $this->Flash->success(__('The article has been saved.'));
 
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The article could not be saved. Please, try again.'));
         }
-        $this->set(compact('article'));
+        $this->set(compact('userinfo'));
     }
 
-    /**
-     * Edit method
-     *
-     * @param string|null $id Article id.
-     * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
+
+
     public function edit($id = null)
     {
         $article = $this->Articles->get($id, contain: []);
@@ -84,13 +62,6 @@ class ArticlesController extends AppController
         $this->set(compact('article'));
     }
 
-    /**
-     * Delete method
-     *
-     * @param string|null $id Article id.
-     * @return \Cake\Http\Response|null Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);

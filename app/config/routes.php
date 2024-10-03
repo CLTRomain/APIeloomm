@@ -25,56 +25,26 @@
 use Cake\Routing\Route\DashedRoute;
 use Cake\Routing\RouteBuilder;
 
+
 return static function (RouteBuilder $routes) {
-    /*
-     * The default class to use for all routes
-     *
-     * The following route classes are supplied with CakePHP and are appropriate
-     * to set as the default:
-     *
-     * - Route
-     * - InflectedRoute
-     * - DashedRoute
-     *
-     * If no call is made to `Router::defaultRouteClass()`, the class used is
-     * `Route` (`Cake\Routing\Route\Route`)
-     *
-     * Note that `Route` does not do any inflections on URLs which will result in
-     * inconsistently cased URLs when used with `{plugin}`, `{controller}` and
-     * `{action}` markers.
-     */
+
     $routes->setRouteClass(DashedRoute::class);
 
     $routes->scope('/', function (RouteBuilder $builder) {
 
-        $builder->connect('/login', ['controller' => 'Users', 'action' => 'login']);
-        $builder->connect('/logout', ['controller' => 'Users', 'action' => 'logout']);
 
-        /*
-         * Here, we are connecting '/' (base path) to a controller called 'Pages',
-         * its action called 'display', and we pass a param to select the view file
-         * to use (in this case, templates/Pages/home.php)...
-         */
 
         $builder->connect('/', ['controller' => 'Pages', 'action' => 'home']);
         $builder->connect('/a-propos-de-nous.htm', ['controller' => 'Pages', 'action' => 'display', 'a-propos-de-nous']);
-        
-        
         $builder->connect('/la-carte.htm', ['controller' => 'Products', 'action' => 'index']);
         $builder->connect('/carte/{id}-{slug}.htm', ['controller' => 'Products', 'action' => 'view'])->setPass(['id', 'slug'])->setPatterns([
             'id' => '[0-9]+',
         ]);
-
-
         $builder->connect('/cgv.htm', ['controller' => 'Pages', 'action' => 'display', 'cgv']);
         $builder->connect('/politique-de-confidentialite.htm', ['controller' => 'Pages', 'action' => 'display', 'privacy-policy']);
         $builder->connect('/sitemap.xml',['controller'=>'Pages','action'=>'sitemap']);
 
 
-
-        /*
-         * ...and connect the rest of 'Pages' controller's URLs.
-         */
         $builder->connect('/pages/*', 'Pages::display');
 
         // CHECKOUT
@@ -84,20 +54,6 @@ return static function (RouteBuilder $routes) {
 
         //$builder->connect('/api/contracts/{id}', ['controller' => 'Api', 'action' => 'subContracts'], ['_name' => 'apiSubContracts'])->setPass(['id'])->setExtensions(['json']);
 
-
-        /*
-         * Connect catchall routes for all controllers.
-         *
-         * The `fallbacks` method is a shortcut for
-         *
-         * ```
-         * $builder->connect('/{controller}', ['action' => 'index']);
-         * $builder->connect('/{controller}/{action}/*', []);
-         * ```
-         *
-         * You can remove these routes once you've connected the
-         * routes you want in your application.
-         */
         $builder->fallbacks();
     });
 
@@ -105,12 +61,16 @@ return static function (RouteBuilder $routes) {
         $routes->setExtensions(['json']);
 
         $routes->resources('Articles', function (RouteBuilder $routes){
-           $routes->resources('Comments', ['prefix' => 'Articles']);
+            $routes->resources('Comments', ['prefix' => 'Articles']);
         });
-    
+
         $routes->resources('Recipes', function (RouteBuilder $routes) {
             $routes->resources('Comments');
         });
+        $routes->connect('/v1/login/test', ['controller' => 'ManageConnection', 'action' => 'test']);
+
+        $routes->connect('/login', ['controller' => 'ManageConnection', 'action' => 'login']);
+        $routes->connect('/logout', ['controller' => 'Users', 'action' => 'logout']);
     });
 
 
@@ -126,21 +86,4 @@ return static function (RouteBuilder $routes) {
         $builder->fallbacks(DashedRoute::class);
     });
 
-    /*
-     * If you need a different set of middleware or none at all,
-     * open new scope and define routes there.
-     *
-     * ```
-     * $routes->scope('/api', function (RouteBuilder $builder) {
-     *     // No $builder->applyMiddleware() here.
-     *
-     *     // Parse specified extensions from URLs
-     *     // $builder->setExtensions(['json', 'xml']);
-     *
-     *     // Connect API actions here.
-     * });
-     * ```
-     */
 };
-
-

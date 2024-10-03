@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\V1;
 
 use App\Controller\AppController;
+use Cake\Http\Exception\UnauthorizedException;
+use Firebase\JWT\JWT;
 
 /**
  * Recipes Controller
@@ -15,24 +17,25 @@ class RecipesController extends AppController
     public function initialize() : void
     {
         parent::initialize();
-    
-        //$this->loadComponent('Authentication.Authentication');
-       // $this->Authentication->allowUnauthenticated(['view', 'index']);
+
+        $this->loadComponent('Authentication.Authentication');
+        $this->Authentication->allowUnauthenticated(['view', 'index', 'add']);
+        $this->Users = $this->getTableLocator()->get('Users'); // Charger le modèle Users
+        $this->loadComponent('Flash');
+
+
+
 
     }
-    /**
-     * Index method
-     *
-     * @return \Cake\Http\Response|null|void Renders view
-     */
+
     public function index()
     {
-         
+
         $type = "tee-shirt";
         $username = "romain";
         $mdp = "123123";
 
-        $articles = $this->fetchTable('Articles')->find('all');
+        $articles = $this->fetchTable('Articles')->find('all'); // fetch dans la db
 
 
         // $status = "status";
@@ -53,46 +56,61 @@ class RecipesController extends AppController
        // return $this->response = $this->response->withStatus(404);
     }
 
-    /**
-     * View method
-     *
-     * @param string|null $id Recipe id.
-     * @return \Cake\Http\Response|null|void Renders view
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
     public function view($id = null)
     {
         $recipe = $this->Recipes->get($id, contain: []);
         $this->set(compact('recipe'));
     }
 
-    /**
-     * Add method
-     *
-     * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
-     */
     public function add()
     {
-        $recipe = $this->Recipes->newEmptyEntity();
-        if ($this->request->is('post')) {
-            $recipe = $this->Recipes->patchEntity($recipe, $this->request->getData());
-            if ($this->Recipes->save($recipe)) {
-                $this->Flash->success(__('The recipe has been saved.'));
+        $user = $this->Users->newEmptyEntity();
 
+        if ($this->request->is('post')) {
+            // Récupérer les données du formulaire
+            $data = $this->request->getData();
+
+            $data['refreshToken'] = $this->generateToken($data['email']); // Assuming generateToken method exists
+
+
+            $user = $this->Users->patchEntity($user, $data);
+
+            // Essayer de sauvegarder l'utilisateur
+            if ($this->Users->save($user)) {
+                $this->Flash->success(__('L’utilisateur a été ajouté avec succès.'));
+
+                // Rediriger vers une autre page après la création
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('The recipe could not be saved. Please, try again.'));
+            $this->Flash->error(__('L’utilisateur n’a pas pu être ajouté. Veuillez réessayer.'));
         }
-        $this->set(compact('recipe'));
+
     }
 
-    /**
-     * Edit method
-     *
-     * @param string|null $id Recipe id.
-     * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
+    public function generateToken($userId)
+    {
+        // Récupérer la clé privée depuis .env
+        $privateKey = file_get_contents(CONFIG . '/private.pem');
+
+        if (!$privateKey) {
+            throw new UnauthorizedException(__('Clé privée manquante')); // cas erreur clef non présente
+        }
+
+        // Définir le payload du JWT
+        $payload = [
+            'sub' => $userId,  // L'identifiant de l'utilisateur
+            'iat' => time(),   // Date de création du token
+            'exp' => time() + 3600 // Expiration dans 1 heure
+        ];
+
+        // Générer le token
+        $jwt = JWT::encode($payload, $privateKey, 'RS256');
+
+        return $jwt;
+    }
+
+
+
     public function edit($id = null)
     {
         $recipe = $this->Recipes->get($id, contain: []);
@@ -108,13 +126,7 @@ class RecipesController extends AppController
         $this->set(compact('recipe'));
     }
 
-    /**
-     * Delete method
-     *
-     * @param string|null $id Recipe id.
-     * @return \Cake\Http\Response|null Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
+
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);

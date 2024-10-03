@@ -53,7 +53,7 @@ require CAKE . 'functions.php';
  * See https://github.com/josegonzalez/php-dotenv for API details.
  *
  * Uncomment block of code below if you want to use `.env` file during development.
- * You should copy `config/.env.example` to `config/.env` and set/modify the
+ * You should copy `config/.env` to `config/.env` and set/modify the
  * variables as required.
  *
  * The purpose of the .env file is to emulate the presence of the environment
@@ -92,6 +92,10 @@ try {
  */
 if (file_exists(CONFIG . 'app_local.php')) {
     Configure::load('app_local', 'default');
+}
+
+if (file_exists(CONFIG . '.env')) {
+    (new \josegonzalez\Dotenv\Loader(CONFIG . '.env'))->parse()->toEnv();
 }
 
 /*
