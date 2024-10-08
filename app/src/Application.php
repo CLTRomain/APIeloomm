@@ -11,7 +11,6 @@ use Cake\Http\BaseApplication;
 use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
-use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Authentication\AuthenticationService;
@@ -27,68 +26,64 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 {
 
     public function bootstrap(): void
-{
-    parent::bootstrap();
+    {
+        parent::bootstrap();
 
-    $this->addPlugin('Authentication');
-}
+    }
 
-public function beforeFilter(\Cake\Event\EventInterface $event)
-{
-    parent::beforeFilter($event);
 
-    // Assure-toi que l'authentification est bien initialisée
-    $this->loadComponent('Authentication.Authentication');
-}
+
+    public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
+    {
+        $middlewareQueue->add(new ErrorHandlerMiddleware(Configure::read('Error')))
+            ->add(new AssetMiddleware())
+            ->add(new RoutingMiddleware($this))
+            ->add(new BodyParserMiddleware())
+            ->add(new AuthenticationMiddleware($this));
+
+        return $middlewareQueue;
+    }
 
     public function getAuthenticationService(ServerRequestInterface $request): AuthenticationServiceInterface
     {
         $service = new AuthenticationService();
 
-     //l'Authentification via formulaire
+       // Authentification via formulaire
+       $service->loadIdentifier('Authentication.Password', [
+            'fields' => [
+                'username' => ['email'],
+                'password' => 'password',
+            ],
+            'resolver' => [
+                'className' => 'Authentication.Orm',
+                'userModel' => 'Users',
+            ],
+
+        ]);
+
         $service->loadAuthenticator('Authentication.Form', [
             'fields' => [
                 'username' => 'email',
-                'password' => 'password'
+                'password' => 'password'      // ne fonctionne pas avec credentials
             ],
+
         ]);
 
-    // l'Authentification via TokenJWT
+        // Authentification via Token JWT
         $service->loadIdentifier('Authentication.JwtSubject');
         $service->loadAuthenticator('Authentication.Jwt', [
-            'secretKey' => file_get_contents(CONFIG . '/public.pem'), // lire le fichier public.pem pour décoder
+            'secretKey' => file_get_contents(CONFIG . '/public.pem'),
             'algorithm' => 'RS256',
-            'returnPayload' => true // true de base
+            'returnPayload' => true
         ]);
+
+
 
 
         return $service;
     }
 
-    public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
-    {
-        $middlewareQueue->add(new ErrorHandlerMiddleware(Configure::read('Error')))
-            // Other middleware that CakePHP provides.
-            ->add(new AssetMiddleware())
-            ->add(new RoutingMiddleware($this))
-            ->add(new BodyParserMiddleware())
-
-            // Add the AuthenticationMiddleware. It should be
-            // after routing and body parser.
-            ->add(new AuthenticationMiddleware($this));
-    /*    ->add(new AuthenticationMiddleware($this,[
-
-    ]));*/
-
-
-
-        return $middlewareQueue;
-    }
-
     public function services(ContainerInterface $container): void
     {
     }
-
-
-
 }

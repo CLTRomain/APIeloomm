@@ -12,6 +12,7 @@ class AppController extends Controller
     public function initialize() : void
     {
         parent::initialize();
+        $this->loadComponent('Flash');
 
         $this->loadComponent('Authentication.Authentication');
        $this->Authentication->allowUnauthenticated(['view', 'index']);

@@ -25,8 +25,9 @@ class User extends Entity
         'created' => true,
         'modified' => true,
         'articles' => true,
-        'refreshToken' => true,
+        'refresh_token' => true,
         'refresh_token_validity' => true,
+        'role_id' => true,
     ];
 
     protected array $_hidden = [

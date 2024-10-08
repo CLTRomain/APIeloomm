@@ -17,14 +17,11 @@ class UsersTable extends Table
         parent::initialize($config);
 
         $this->setTable('users');
-        $this->setDisplayField('email');
-        //$this->setPrimaryKey('id');
-
         $this->addBehavior('Timestamp');
 
-        $this->hasMany('Articles', [
+   /*     $this->hasMany('Articles', [
             'foreignKey' => 'user_id',
-        ]);
+        ]);*/
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -40,11 +37,6 @@ class UsersTable extends Table
             ->requirePresence('password', 'create')
             ->notEmptyString('password');
 
-        $validator
-            ->scalar('refreshToken') // Ajoutez cette ligne
-            ->requirePresence('refreshToken', 'create') // Optionnel selon votre logique
-            ->notEmptyString('refreshToken'); // Optionnel selon votre logique
-        //
         return $validator;
     }
 

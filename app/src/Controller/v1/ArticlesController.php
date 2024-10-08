@@ -9,19 +9,40 @@ use App\Controller\AppController;
  * Articles Controller
  *
  */
+
+
 class ArticlesController extends AppController
 {
+
+    public function initialize(): void
+    {
+        parent::initialize();
+
+
+        //     $this->loadComponent('Authentication.Authentication');
+
+        //$this->Authentication->setConfig('unauthenticatedRedirect', '/v1/login/test');
+        // ici redirect pour les autres controller si non identifier
+
+
+        //$this->Authentication->allowUnauthenticated(['login']);
+    }
+
     public function index()
     {
-
         $recipes = "Articles Perfect";
-
         // $this->set('recipes', $recipes);
         // $this->viewBuilder()->setOption('serialize', ['recipes']);
-
         return $this->response->withType('json')->withStringBody(json_encode([
             'recipes' => $recipes
         ]));
+    }
+
+    public function GetallProducts()
+    {
+        $this->loadModel('Articles');
+        $articles = $this->Articles->find('all');
+        $this->set(compact('articles'));
     }
 
     public function view($id = null)

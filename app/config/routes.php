@@ -64,12 +64,18 @@ return static function (RouteBuilder $routes) {
             $routes->resources('Comments', ['prefix' => 'Articles']);
         });
 
+        $routes->connect('/Getallproducts', ['controller' => 'Articles','action'=> 'Getproducts']);
+
+
+
         $routes->resources('Recipes', function (RouteBuilder $routes) {
             $routes->resources('Comments');
         });
-        $routes->connect('/v1/login/test', ['controller' => 'ManageConnection', 'action' => 'test']);
 
+        $routes->connect('/register', ['controller' => 'ManageConnection','action'=> 'register']);
         $routes->connect('/login', ['controller' => 'ManageConnection', 'action' => 'login']);
+
+        //$routes->connect('/login', ['controller' => 'ManageConnection', 'action' => 'login']);
         $routes->connect('/logout', ['controller' => 'Users', 'action' => 'logout']);
     });
 
